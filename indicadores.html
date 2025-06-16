@@ -1,0 +1,150 @@
+<!-- Vamos a armar una estructura sólida pero simple usando solo JavaScript del lado del cliente (nada de servidores ni backends), embebido en un archivo .html. Este archivo accederá a la API pública de mindicador.cl del Banco Central de Chile, la cual entrega indicadores económicos en formato JSON. -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicadores Económicos - Banco Central</title>
+    <style>
+        /* Variables de diseño */
+        :root {
+            --color-primario: #0a3d62;
+            --color-fondo: #f5f5f5;
+            --color-texto: #2f3640;
+            --color-acento: #40739e;
+            --color-borde: #0a3d62;
+            --spacing: 1rem;
+            --border-radius: 0.5rem;
+        }
+        /* Reset básico */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            font-size: 16px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--color-fondo);
+            color: var(--color-texto);
+            padding: var(--spacing);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: calc(var(--spacing) * 1.5);
+            padding: 0 calc(var(--spacing) * 0.5);
+        }
+        h1 {
+            font-size: 1.75rem;
+            color: var(--color-primario);
+        }
+        .fecha {
+            font-size: 1rem;
+            color: var(--color-acento);
+        }
+        #indicadores {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--spacing);
+            padding: 0 calc(var(--spacing) * 0.5);
+        }
+        .indicador {
+            padding: var(--spacing);
+            background: #ffffff;
+            border-left: 6px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 80px;
+        }
+        .indicador span {
+            font-weight: bold;
+            font-size: 1.125rem;
+        }
+        .indicador::before {
+            content: attr(data-label);
+            font-size: 0.875rem;
+            color: var(--color-acento);
+            margin-bottom: calc(var(--spacing) / 2);
+        }
+        @media (max-width: 600px) {
+            .header { padding: 0 var(--spacing); }
+            h1 { font-size: 1.5rem; }
+            .fecha { font-size: 0.875rem; }
+            #indicadores { gap: calc(var(--spacing) / 2); }
+            .indicador { padding: calc(var(--spacing) * 0.75); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Indicadores Económicos - Banco Central</h1>
+        <div class="fecha" id="fecha">Cargando fecha...</div>
+    </div>
+    <div id="indicadores">
+        <div class="indicador" id="uf" data-label="UF"> <span>Cargando...</span></div>
+        <div class="indicador" id="dolar" data-label="Dólar"> <span>Cargando...</span></div>
+        <div class="indicador" id="euro" data-label="Euro"> <span>Cargando...</span></div>
+        <div class="indicador" id="utm" data-label="UTM"> <span>Cargando...</span></div>
+        <div class="indicador" id="ipc" data-label="IPC"> <span>Cargando...</span></div>
+        <div class="indicador" id="tpm" data-label="TPM"> <span>Cargando...</span></div>
+        <div class="indicador" id="cobre" data-label="Libra de Cobre"> <span>Cargando...</span></div>
+        <div class="indicador" id="desempleo" data-label="Tasa de Desempleo"> <span>Cargando...</span></div>
+    </div>
+
+    <script>
+        // Función para formatear fecha actual
+        function actualizarFecha() {
+            const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const hoy = new Date();
+            document.getElementById('fecha').textContent = hoy.toLocaleDateString('es-CL', opciones);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            actualizarFecha();
+            const url = 'https://mindicador.cl/api';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("No se pudo obtener la información");
+                    return response.json();
+                })
+                .then(data => {
+                    const indicadores = [
+                        { id: 'uf', valor: data.uf.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
+                        { id: 'dolar', valor: data.dolar.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
+                        { id: 'euro', valor: data.euro.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
+                        { id: 'utm', valor: data.utm.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
+                        { id: 'ipc', valor: data.ipc.valor.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' %' },
+                        { id: 'tpm', valor: data.tpm.valor.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' %' },
+                        { id: 'cobre', valor: data.libra_cobre.valor.toLocaleString('es-CL', { style: 'currency', currency: 'USD' }) },
+                        { id: 'desempleo', valor: data.tasa_desempleo.valor.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' %' }
+                    ];
+                    indicadores.forEach(ind => {
+                        document.querySelector(`#${ind.id} span`).textContent = ind.valor;
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('indicadores').innerHTML = `<p>Error al cargar los datos: ${error.message}</p>`;
+                    console.error("Error al obtener datos de mindicador.cl:", error);
+                });
+        });
+    </script>
+</body>
+</html>
+
+
