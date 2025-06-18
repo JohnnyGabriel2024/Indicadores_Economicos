@@ -1,10 +1,8 @@
-<!-- Vamos a armar una estructura sólida pero simple usando solo JavaScript del lado del cliente (nada de servidores ni backends), embebido en un archivo .html. Este archivo accederá a la API pública de mindicador.cl del Banco Central de Chile, la cual entrega indicadores económicos en formato JSON. -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Indicadores Económicos - Banco Central</title>
     <style>
         /* Variables de diseño */
@@ -14,28 +12,39 @@
             --color-texto: #2f3640;
             --color-acento: #40739e;
             --color-borde: #0a3d62;
+            --color-error: #e84118;
             --spacing: 1rem;
             --border-radius: 0.5rem;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --transition: 0.3s ease-in-out;
         }
+
         /* Reset básico */
         *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         html {
             font-size: 16px;
+            scroll-behavior: smooth;
         }
+
         body {
-            font-family: Arial, sans-serif;
-            background: var(--color-fondo);
+            font-family: var(--font-family);
+            background-color: var(--color-fondo);
             color: var(--color-texto);
             padding: var(--spacing);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
         .header {
             width: 100%;
             max-width: 900px;
@@ -44,15 +53,26 @@
             align-items: center;
             margin-bottom: calc(var(--spacing) * 1.5);
             padding: 0 calc(var(--spacing) * 0.5);
+            user-select: none;
         }
+
         h1 {
-            font-size: 1.75rem;
+            font-size: 1.875rem;
             color: var(--color-primario);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
+
         .fecha {
-            font-size: 1rem;
+            font-size: 1.125rem;
             color: var(--color-acento);
+            font-weight: 600;
+            font-style: italic;
+            white-space: nowrap;
         }
+
         #indicadores {
             width: 100%;
             max-width: 900px;
@@ -61,59 +81,128 @@
             gap: var(--spacing);
             padding: 0 calc(var(--spacing) * 0.5);
         }
+
         .indicador {
-            padding: var(--spacing);
-            background: #ffffff;
+            background-color: #ffffff;
             border-left: 6px solid var(--color-borde);
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: var(--spacing);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 80px;
+            min-height: 90px;
+            transition: box-shadow var(--transition);
+            cursor: default;
         }
-        .indicador span {
-            font-weight: bold;
-            font-size: 1.125rem;
+
+        .indicador:hover,
+        .indicador:focus-within {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-left-color: var(--color-acento);
         }
+
         .indicador::before {
             content: attr(data-label);
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: var(--color-acento);
             margin-bottom: calc(var(--spacing) / 2);
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            user-select: none;
         }
+
+        .indicador span {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--color-primario);
+            text-align: right;
+            user-select: text;
+        }
+
+        /* Mensaje de error */
+        #indicadores p {
+            grid-column: 1 / -1;
+            color: var(--color-error);
+            font-weight: 700;
+            font-size: 1.125rem;
+            padding: var(--spacing);
+            background: #fff0f0;
+            border: 1px solid var(--color-error);
+            border-radius: var(--border-radius);
+            text-align: center;
+            user-select: none;
+        }
+
+        /* Responsive */
         @media (max-width: 600px) {
-            .header { padding: 0 var(--spacing); }
-            h1 { font-size: 1.5rem; }
-            .fecha { font-size: 0.875rem; }
-            #indicadores { gap: calc(var(--spacing) / 2); }
-            .indicador { padding: calc(var(--spacing) * 0.75); }
+            .header {
+                padding: 0 var(--spacing);
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                text-align: left;
+            }
+
+            .fecha {
+                font-size: 1rem;
+                font-style: normal;
+                color: var(--color-primario);
+            }
+
+            #indicadores {
+                gap: calc(var(--spacing) / 2);
+                grid-template-columns: 1fr;
+                padding: 0 var(--spacing);
+            }
+
+            .indicador {
+                padding: calc(var(--spacing) * 0.75);
+                min-height: 75px;
+            }
+
+            .indicador span {
+                font-size: 1.125rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
+    <header class="header" role="banner">
         <h1>Indicadores Económicos - Banco Central</h1>
-        <div class="fecha" id="fecha">Cargando fecha...</div>
-    </div>
-    <div id="indicadores">
-        <div class="indicador" id="uf" data-label="UF"> <span>Cargando...</span></div>
-        <div class="indicador" id="dolar" data-label="Dólar"> <span>Cargando...</span></div>
-        <div class="indicador" id="euro" data-label="Euro"> <span>Cargando...</span></div>
-        <div class="indicador" id="utm" data-label="UTM"> <span>Cargando...</span></div>
-        <div class="indicador" id="ipc" data-label="IPC"> <span>Cargando...</span></div>
-        <div class="indicador" id="tpm" data-label="TPM"> <span>Cargando...</span></div>
-        <div class="indicador" id="cobre" data-label="Libra de Cobre"> <span>Cargando...</span></div>
-        <div class="indicador" id="desempleo" data-label="Tasa de Desempleo"> <span>Cargando...</span></div>
-    </div>
+        <time class="fecha" id="fecha" datetime="">Cargando fecha...</time>
+    </header>
+    <main id="indicadores" role="main" aria-live="polite" aria-label="Indicadores económicos actuales">
+        <section class="indicador" id="uf" data-label="UF" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="dolar" data-label="Dólar" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="euro" data-label="Euro" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="utm" data-label="UTM" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="ipc" data-label="IPC" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="tpm" data-label="TPM" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="cobre" data-label="Libra de Cobre" tabindex="0"><span>Cargando...</span></section>
+        <section class="indicador" id="desempleo" data-label="Tasa de Desempleo" tabindex="0"><span>Cargando...</span></section>
+    </main>
 
     <script>
-        // Función para formatear fecha actual
+        // Función para actualizar la fecha actual en formato adecuado
         function actualizarFecha() {
             const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
             const hoy = new Date();
-            document.getElementById('fecha').textContent = hoy.toLocaleDateString('es-CL', opciones);
+            const fechaElemento = document.getElementById('fecha');
+            fechaElemento.textContent = hoy.toLocaleDateString('es-CL', opciones);
+            fechaElemento.setAttribute('datetime', hoy.toISOString().slice(0,10)); // ISO 8601 YYYY-MM-DD
         }
+
+        // Función para formatear números de manera consistente
+        function formatearValor(valor, opciones) {
+            return valor.toLocaleString('es-CL', opciones);
+        }
+
+        // Carga y muestra de indicadores
         document.addEventListener('DOMContentLoaded', () => {
             actualizarFecha();
             const url = 'https://mindicador.cl/api';
@@ -125,26 +214,28 @@
                 })
                 .then(data => {
                     const indicadores = [
-                        { id: 'uf', valor: data.uf.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
-                        { id: 'dolar', valor: data.dolar.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
-                        { id: 'euro', valor: data.euro.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
-                        { id: 'utm', valor: data.utm.valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' }) },
-                        { id: 'ipc', valor: data.ipc.valor.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' %' },
-                        { id: 'tpm', valor: data.tpm.valor.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' %' },
-                        { id: 'cobre', valor: data.libra_cobre.valor.toLocaleString('es-CL', { style: 'currency', currency: 'USD' }) },
-                        { id: 'desempleo', valor: data.tasa_desempleo.valor.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' %' }
+                        { id: 'uf', valor: formatearValor(data.uf.valor, { style: 'currency', currency: 'CLP' }) },
+                        { id: 'dolar', valor: formatearValor(data.dolar.valor, { style: 'currency', currency: 'CLP' }) },
+                        { id: 'euro', valor: formatearValor(data.euro.valor, { style: 'currency', currency: 'CLP' }) },
+                        { id: 'utm', valor: formatearValor(data.utm.valor, { style: 'currency', currency: 'CLP' }) },
+                        { id: 'ipc', valor: formatearValor(data.ipc.valor, { minimumFractionDigits: 2 }) + ' %' },
+                        { id: 'tpm', valor: formatearValor(data.tpm.valor, { minimumFractionDigits: 2 }) + ' %' },
+                        { id: 'cobre', valor: formatearValor(data.libra_cobre.valor, { style: 'currency', currency: 'USD' }) },
+                        { id: 'desempleo', valor: formatearValor(data.tasa_desempleo.valor, { minimumFractionDigits: 2 }) + ' %' }
                     ];
                     indicadores.forEach(ind => {
-                        document.querySelector(`#${ind.id} span`).textContent = ind.valor;
+                        const elemento = document.querySelector(`#${ind.id} span`);
+                        if (elemento) {
+                            elemento.textContent = ind.valor;
+                        }
                     });
                 })
                 .catch(error => {
-                    document.getElementById('indicadores').innerHTML = `<p>Error al cargar los datos: ${error.message}</p>`;
+                    const contenedor = document.getElementById('indicadores');
+                    contenedor.innerHTML = `<p>Error al cargar los datos: ${error.message}</p>`;
                     console.error("Error al obtener datos de mindicador.cl:", error);
                 });
         });
     </script>
 </body>
 </html>
-
-
